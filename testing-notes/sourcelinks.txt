@@ -1,0 +1,9 @@
+1.jest-methods : https://github.com/testing-library/jest-dom
+
+2.roles-cheatsheet : https://www.w3.org/TR/wai-aria/#role_definitions
+
+3.test-libray methods : https://testing-library.com/docs/ecosystem-user-event/
+		      : https://testing-library.com/docs/user-event/convenience
+		      : https://testing-library.com/docs/queries/about
+
+4.mock service worker: https://mswjs.io/docs/getting-started/mocks/rest-api

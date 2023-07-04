@@ -1,0 +1,159 @@
+1.Library used is jest and react-testing-library
+_______________________________________________________
+Installation and setup: 
+	react-testing-libray and jest are pre installed with create react app and other related packages has to be 	installed.
+	To run the test : npm  test ---> this does not requires a browser 
+					jest -> finds, run and asserts test
+					rtl -> provide virtual dom
+
+
+basic default testing
+ : 
+import { render, screen } from '@testing-library/react';
+import App from './App';
+	test('renders learn react link', () => {
+  	render(<App />);
+  	const linkElement = screen.getByText(/learn react/i);   -->/learn react/i -> regex and i for case insensitive
+  	expect(linkElement).toBeInTheDocument();
+	});
+
+
+const linkElement = screen.getByRole('link',{name:/Learn React/i}) -> role more prefreed then text
+
+
+2.Types of tests
+______________________
+1.unit -> each unit
+2.Integration test -> how multiple units work together
+3.functional test -> to test secific funt
+4.End-to-End testing or acceptance testing --> not possible with rtl and jest
+
+
+
+3.TDD and BDD
+_____________________
+TDD -> Test driven developement -> test cases are written first and then code acc to test 
+advantage -> acc to test code is written and can be evaluated as we write the code by running test auto, both will be in sink
+	
+
+4.test cases
+__________________________
+can use logRoles to see the curent comp
+ const {container} = render(<App/>);
+ logRoles(container)
+
+5.Adding eslint and prettier
+______________________________________
+1.download prettier extension --> go to File ->preferences -> search default formatatt ->set to prettier
+
+2.configuring esling
+ 		npm install eslint --save-dev
+		https://medium.com/how-to-react/config-eslint-and-prettier-in-visual-studio-code-for-react-js-development-97bb2236b31a
+
+
+
+
+
+Next app
+-------------------
+for any simulation testing method visit official doc of react-testing-library : https://testing-library.com/docs/
+
+1.Instead of using fireEvents use userEvents, it has multiple method , always await if using userEvent-> click, hover, unhover and others, it has to instanciated
+
+npm install --save-dev @testing-library/user-event@^14 --> setup supports only 14 or above -> default will be 13
+
+const user = userEvent.setup()
+await user.keyboard('[ShiftLeft>]') // Press Shift (without releasing it)
+await user.click(element)
+
+first fetch for not present and then again fetch for present with diff name
+user.click, user.hover, user.unhover
+
+getby -always use this if you know elemnts are present
+queryby - always use this if elements are not present in case of displayed only hover
+findby - always use this for async 
+
+
+
+debugging
+____________________________--
+1.use p and enter file name to run partiucar test file
+2. use test.only to run only one test and test.skip to skip one test
+
+
+
+mocking server respone
+______________________________
+use msw : mock service worker : https://mswjs.io/docs/getting-started/mocks/rest-api
+_______________________________
+ 1.npm install msw --save-dev
+ 2.defining mocks : new folder mocks --> handlers.js and server.js and modify setupTest.js
+
+steps
+__________
+1. in handlers.js create handlers 
+	export const handlers = [rest.get(), res.post() ]
+
+
+2.In server.js create a server  - use this code 
+	import { setupServer } from "msw/node";
+	import { handlers } from "./handlers";
+	// This configures a request mocking server with the given request handlers.
+	export const server = setupServer(...handlers);
+
+3. In setupTest.js ust this code 
+	import "@testing-library/jest-dom";
+
+	// src/setupTests.js
+	import { server } from "./mocks/server.js";
+	// Establish API mocking before all tests.
+	beforeAll(() => server.listen());
+
+	// Reset any request handlers that we may add during the tests,
+	// so they don't affect other tests.
+	afterEach(() => server.resetHandlers());
+
+	// Clean up after the tests are finished.
+	afterAll(() => server.close());
+
+
+------------------------------------------------------------------------------------------------------------
+axios 1.x is not working with testing so install 0.27 version or do some other things specified in the course
+npm install axios@^0.27
+------------------------------------------------------------------------------
+
+IMPORTANT : If we are passing props then we have render the top level compoente otherwise props are inaccissible- testing --> carefull when used props
+
+simulating server response erros - if error is ther then render some compo in code and then check do we have that compo or what
+_________________________________________
+test("check for server response for topping images", async () => {
+  render(<App />);
+  await waitFor(async () => {
+    const image = await screen.findAllByRole("img", { name: /topping$/i });
+    expect(image).toHaveLength(2);
+  });
+});
+
+test("handling server errors", async () => {
+  server.resetHandlers(
+    rest.get("http://localhost:3030/scoops", (req, res, ctx) =>
+      res(ctx.status(500))
+    )
+  );
+  server.resetHandlers(
+    rest.get("http://localhost:3030/toppings", (req, res, ctx) =>
+      res(ctx.status(500))
+    )
+  );
+
+  render(<App />);
+  // this has to be used if only one is ther else waitFor and tohvalenth(2)---> all method return aarray
+  //   const alert = await screen.findByText(/server error/i);
+  //   expect(alert).toBeInTheDocument();
+
+  await waitFor(async () => {
+    const alert = await screen.findAllByText(/server error/i);
+    expect(alert).toHaveLength(2);
+  });
+});
+
